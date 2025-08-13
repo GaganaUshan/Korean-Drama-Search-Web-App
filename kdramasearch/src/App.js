@@ -4,20 +4,18 @@ function App() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [petals, setPetals] = useState([]);
 
   const API_KEY = process.env.REACT_APP_GOOGLE_API_KEY;
   const CSE_ID = process.env.REACT_APP_GOOGLE_CSE_ID;
- 
 
   // Debounce: Delay query to avoid too many API calls
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedQuery(query);
-    }, 600); // delay in ms
+    }, 600);
 
-    return () => {
-      clearTimeout(handler);
-    };
+    return () => clearTimeout(handler);
   }, [query]);
 
   // Auto fetch when debouncedQuery updates
@@ -38,6 +36,18 @@ function App() {
     handleSearch();
   }, [debouncedQuery]);
 
+  // Generate petals
+  useEffect(() => {
+    const tempPetals = Array.from({ length: 20 }).map(() => ({
+      left: Math.random() * 100 + "vw",
+      delay: Math.random() * 5 + "s",
+      duration: 5 + Math.random() * 5 + "s",
+      size: 8 + Math.random() * 12 + "px",
+      rotate: Math.random() * 360 + "deg",
+    }));
+    setPetals(tempPetals);
+  }, []);
+
   return (
     <div
       style={{
@@ -46,8 +56,30 @@ function App() {
         padding: "50px",
         fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
         color: "#333",
+        position: "relative",
+        overflow: "hidden",
       }}
     >
+      {/* Falling petals */}
+      {petals.map((petal, idx) => (
+        <div
+          key={idx}
+          style={{
+            position: "absolute",
+            top: "-20px",
+            left: petal.left,
+            width: petal.size,
+            height: petal.size,
+            backgroundColor: "pink",
+            borderRadius: "50%",
+            opacity: 0.8,
+            transform: `rotate(${petal.rotate})`,
+            animation: `fall ${petal.duration} linear infinite`,
+            animationDelay: petal.delay,
+          }}
+        />
+      ))}
+
       <div
         style={{
           maxWidth: "800px",
@@ -56,6 +88,8 @@ function App() {
           borderRadius: "16px",
           padding: "40px",
           boxShadow: "0 10px 30px rgba(0, 0, 0, 0.1)",
+          position: "relative",
+          zIndex: 1,
         }}
       >
         <h2
@@ -89,7 +123,9 @@ function App() {
 
         <div style={{ marginTop: "40px" }}>
           {results.length === 0 && query.length > 0 ? (
-            <p style={{ textAlign: "center", color: "#888" }}>No results found...</p>
+            <p style={{ textAlign: "center", color: "#888" }}>
+              No results found...
+            </p>
           ) : (
             results.map((item, idx) => (
               <div
@@ -112,12 +148,24 @@ function App() {
                     {item.title}
                   </a>
                 </h3>
-                <p style={{ fontSize: "0.95rem", lineHeight: "1.6" }}>{item.snippet}</p>
+                <p style={{ fontSize: "0.95rem", lineHeight: "1.6" }}>
+                  {item.snippet}
+                </p>
               </div>
             ))
           )}
         </div>
       </div>
+
+      {/* Petal animation */}
+      <style>
+        {`
+          @keyframes fall {
+            0% { transform: translateY(0) rotate(0deg); opacity: 0.8; }
+            100% { transform: translateY(110vh) rotate(360deg); opacity: 0.2; }
+          }
+        `}
+      </style>
     </div>
   );
 }
